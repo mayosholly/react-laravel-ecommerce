@@ -1,0 +1,5 @@
+npx create-react-app ecommerce
+
+install axios
+
+install react-router-dom 

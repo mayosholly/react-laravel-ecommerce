@@ -1,0 +1,534 @@
+Part 1: Setting up the Development Environment
+Setting up Laravel
+Installing PHP and Composer.
+Installing Laravel Installer.
+Creating a new Laravel project.
+Setting up Vue.js
+Installing Node.js and npm.
+Adding Vue.js to the Laravel project using Laravel Mix or creating a separate Vue.js project.
+Configuring Laravel for API development
+Setting up the database.
+Setting up Laravel Sanctum for API Authentication
+
+Part 2: Building the REST API with Laravel
+Designing the Database Schema
+Design the tables and relationships.
+Building the API
+Creating migrations and models.
+Setting up API Routes.
+Building API controllers and defining CRUD operations.
+Validating request data.
+Implementing authentication using tokens.
+Testing API endpoints using Postman or another REST client.
+
+
+Part 3: Building the Frontend with Vue.js
+Introduction to Vue.js
+Basic concepts: Components, Directives, Events.
+Setting up Vue.js in the Project
+Installing necessary dependencies.
+Configuring webpack with Laravel Mix if using in the same project.
+Building Components
+Creating Vue.js components for different UI elements.
+Communicating with the API
+Making HTTP requests to the Laravel API using axios or another HTTP client.
+Handling responses and rendering data on the frontend.
+User Authentication
+Building a login component.
+Implementing Authentication with the API.
+Protecting routes and handling authentication state.
+
+
+Part 4: Bringing it All Together
+Integrating Frontend and Backend
+Make sure the Vue.js frontend can communicate with the Laravel API.
+Error Handling
+Implement proper error handling on both the frontend and backend.
+Deployment
+Guide on deploying the full-stack application.
+Suggestions for hosting services.
+Conclusion
+Recap of what was learned.
+Suggestions for further improvement and learning.
+
+
+Part 1: Setting up the Development Environment For Laravel 10
+In this part let’s start with Laravel for the backend. Before we begin, ensure that you have PHP installed on your system, as Laravel is a PHP framework. You will also need Composer, which is a dependency manager for PHP.
+
+Step 1: Install Laravel
+First, let’s install Laravel using Composer. Open your terminal and enter the following command:
+
+composer global require laravel/installer
+PHP
+
+This command will install the Laravel installer globally on your system.
+
+Step 2: Create a New Laravel Project
+Now, let’s create a new Laravel project. Run the following command, replacing your_project_name with the desired project name:
+
+laravel new EcommerceApp
+PHP
+
+This command creates a new directory with your project name and installs a fresh Laravel installation in that directory.
+
+Step 3: Running the Laravel Application
+Navigate to the newly created project directory:
+
+cd EcommerceApp
+PHP
+
+Now, let’s run the Laravel development server:
+
+php artisan serve
+PHP
+
+You should see an output indicating that the server is running. By default, it runs on http://127.0.0.1:8000. Open this URL in your web browser to see the Laravel welcome page.
+
+Step 5: Setting Up a Database
+Let’s set up a database for our application. You can use any database that Laravel supports. In this tutorial, we’ll use MySQL. You can create a new database using phpMyAdmin or the command line.
+
+After creating the database, open the .env file in the root of your Laravel project. Update the following lines with your database connection information:
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ecommerceapp
+DB_USERNAME=root
+DB_PASSWORD=
+PHP
+
+Now, let’s run the migrations to create the necessary tables:
+
+php artisan migrate
+
+Part 2: Building the REST API with Laravel.
+In this part, we’ll create the backend for our simple e-commerce application. We’ll create models, migrations, and controllers, and define routes for our API endpoints.
+
+Step 1: Create Product Model and Migration
+We’ll need a Product model to represent the items in our e-commerce store. Let’s generate a model along with its migration file:
+
+php artisan make:model Product -m
+PHP
+
+This command creates a new model in the app/Models directory and a migration file in the database/migrations directory.
+
+Product.php
+class Product extends Model
+{
+ use HasFactory;
+ protected $fillable = [
+ 'name', 'description', 'price',
+ ];
+
+}
+In the Laravel framework, the $fillable property of a model class is an array that contains all the attributes that can be mass assignable.
+
+Mass assignment is a feature that allows you to create or update multiple model attributes in a single statement, such as when you create a new model from an array of attributes:
+
+Product::create(['name' => 'Product 1', 'description' => 'Description of product 1', 'price' => 19.99]);
+In this case, if the name, description, and price fields are not specified in the $fillable property of the Product model, this operation will fail. This is a security feature of Laravel to prevent unauthorized updates to model attributes.
+
+Therefore, the line:
+
+protected $fillable = [ 'name', 'description', 'price', ];
+…is specifying that the name, description, and price attributes of the model are allowed to be mass assigned. Any other attributes not included in this array will not be affected by mass assignment operations.
+
+Now, open the migration file and define the columns for the products table. For our example, we’ll just keep it simple with a name, description, and price:
+
+public function up()
+{
+   Schema::create('products', function (Blueprint $table) {
+     $table->id();
+     $table->string('name');
+     $table->text('description');
+     $table->decimal('price', 8, 2);
+     $table->timestamps();
+});
+}
+PHP
+
+$table->decimal('price', 8, 2); is a way of defining a new column in a database table, where:
+
+'price' is the name of the column.
+8 is the total number of digits that the ‘price’ field can hold.
+2 is the number of digits after the decimal point.
+So, in this case, the price field can hold a number up to 999999.99. This field can hold a maximum of 8 digits in total, of which 2 digits are reserved for after the decimal point. This means it can hold a maximum of 6 digits before the decimal point.
+
+Now run the migrations:
+
+php artisan migrate
+PHP
+
+This will create the products table in the database with the columns we defined.
+
+Step 2: Create a Product Controller
+We need a controller to handle the logic for our API. Create a controller using Artisan:
+
+php artisan make:controller ProductController --api
+PHP
+
+This command generates a controller with the methods required for a RESTful resource (index, create, store, show, edit, update, destroy).
+
+Step 3: Define Routes
+Open the routes/api.php file and define the routes for our product resource:
+
+use App\Http\Controllers\ProductController;
+
+Route::apiResource('products', ProductController::class);
+PHP
+
+This single line generates all the necessary routes for a RESTful resource. You can run this command to inspect them…
+
+php artisan route:list
+Step 4: Implement Controller Methods
+Now let’s implement the methods in ProductController. This is how you go about…
+
+In ProductController, implement these CRUD methods:
+
+<?php
+
+
+namespace App\Http\Controllers;
+
+
+use App\Models\Product;
+use Illuminate\Http\Request;
+
+
+class ProductController extends Controller
+{
+/**
+* Display a listing of the resource.
+*/
+public function index()
+{
+    return response()->json(Product::all(), 200);
+}
+
+
+/**
+* Store a newly created resource in storage.
+*/
+public function store(Request $request)
+{
+   $validatedData = $request->validate([
+      'name' => 'required|max:255',
+      'description' => 'required',
+      'price' => 'required|numeric',
+]);
+
+
+  $product = Product::create($validatedData);
+
+
+  return response()->json($product, 201);
+}
+
+
+/**
+* Display the specified resource.
+*/
+public function show(string $id)
+{
+    // Retrieve the product from the database using the provided $id
+    $product = Product::find($id);
+
+
+     // Check if the product was found
+    if ($product) {
+   // Return the product as a JSON response with a 200 HTTP status code
+        return response()->json($product, 200);
+    } else {
+// Return a 404 Not Found HTTP status code if the product was not found
+   return response()->json(['message' => 'Product not found'], 404);
+}
+}
+
+
+/**
+* Update the specified resource in storage.
+*/
+public function update(Request $request, Product $product)
+{
+// Validate the request data
+    $validatedData = $request->validate([
+      'name' => 'required|max:255',
+      'description' => 'required',
+      'price' => 'required|numeric',
+]);
+
+
+// Check if the product was found
+if ($product) {
+// Update the product with the validated data
+$product->update($validatedData);
+
+
+  // Return the updated product as a JSON response with a 200 HTTP status code
+   return response()->json($product, 200);
+} else {
+  // Return a 404 Not Found HTTP status code if the product was not found
+  return response()->json(['message' => 'Product not found'], 404);
+}
+}
+
+
+/**
+* Remove the specified resource from storage.
+*/
+public function destroy(Product $product)
+{
+  // Check if the product was found
+  if ($product) {
+  // Delete the product
+  $product->delete();
+
+
+  // Return a 204 No Content HTTP status code
+  return response()->json(null, 204);
+} else {
+  // Return a 404 Not Found HTTP status code if the product was not found
+  return response()->json(['message' => 'Product not found'], 404);
+}
+}
+}
+PHP
+
+Now you have all the CRUD methods implemented in your ProductController. These methods handle creating, reading, updating, and deleting products.
+
+I did a video earlier on Laravel 10 REST API a comprehensive guide. So you can test the api. For example…
+List all products (GET request):http://127.0.0.1:8000/api/products
+Create a new product (POST request):http://127.0.0.1:8000/api/products
+In Postman, choosePOSTas the request method.
+The body of the request should be a JSON object that includes ‘name’, ‘description’ and ‘price’, like so:
+key and value fields fill them with the data below…
+{ 
+   "name": "Product Name", 
+    "description": "Product Description", 
+    "price": 99.99 
+}
+PHP
+3. Show a single product (GET request):http://127.0.0.1:8000/api/products/{product}
+
+Replace{product}with the ID of the product you want to retrieve.
+e.g http://127.0.0.1:8000/api/products/1
+4. Update a product (PUT or PATCH request):http://127.0.0.1:8000/api/products/{product}
+
+Replace{product}with the ID of the product you want to update.
+e.g http://127.0.0.1:8000/api/products/1
+The body of the request should be a JSON object that includes the fields you want to update, for example:
+{ 
+    "name": "New Product Name", 
+     "price": 149.99 
+}
+PHP
+
+since we have validation in our laravel the update will ensure you add all the three fields but if you don’t want you can disable the validation probably on certain data or all of them
+
+e.g
+ 'name' => 'required|max:255',
+
+ // 'description' => 'required',
+
+ // 'price' => 'required|numeric',
+5. Delete a product (DELETE request):http://127.0.0.1:8000/api/products/{product}
+Replace{product}with the ID of the product, you want to delete.
+e.g http://127.0.0.1:8000/api/products/1
+Laravel determines if a request is an AJAX request by checking if theX-Requested-Withheader is set toXMLHttpRequest.
+
+In Postman, ensure that you are setting the headerX-Requested-WithtoXMLHttpRequest. You can do this by going to the “Headers” tab in Postman and adding a new key-value pair:
+
+X<span class="token operator">-</span>Requested<span class="token operator">-</span>With<span class="token punctuation">:</span> XMLHttpRequest<span class="token punctuation">.</span>
+PHP
+
+This should ensure that Laravel treats the request as an AJAX request and returns validation error messages in JSON format, which can be easily read in Postman.
+
+Authentication using Laravel Sanctum
+
+To implement authentication using Laravel Sanctum, you need to set up the backend by adding routes and controllers that handle registration, login, and logout. If you haven’t already set up Sanctum, you’ll need to follow the initial steps for installing and configuring it as well.
+
+Here’s how you can setup your Laravel backend:
+
+Install Sanctum:If you haven’t already, you’ll need to install Sanctum:
+composer require laravel/sanctum
+PHP
+
+Then, publish the Sanctum configuration and migration files:
+
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+PHP
+
+Run the migrations:
+
+php artisan migrate
+PHP
+
+Add the Laravel\Sanctum\HasApiTokens trait to your App\Models\User model:
+
+namespace App\Models;
+
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, Notifiable;
+}
+PHP
+
+Adding the Laravel\Sanctum\HasApiTokens trait to the User model enables the model to authenticate requests through API tokens, providing a simple and secure way to manage token-based authentication for the user.
+
+Configure CORS:
+
+Modify the cors.php config to allow requests from your frontend domain. For example:
+
+'paths' => ['api/*', 'sanctum/csrf-cookie'],
+
+'allowed_origins' => ['http://localhost:8080'], // or your frontend’s URL
+
+'supports_credentials' => true,
+PHP
+
+'paths' => ['api/*', 'sanctum/csrf-cookie'],: This specifies the paths that should be accessible cross-origin. In this case, all routes under api/ and the sanctum/csrf-cookie route are accessible from other domains.
+'allowed_origins' => ['http://localhost:8080'],: This specifies which origins are allowed to access the resources. In this example, only requests from http://localhost:8080 are allowed.
+'supports_credentials' => true,: This means that the browser should include credentials like cookies or HTTP authentication headers in the request. It’s vital for Sanctum, Laravel’s authentication package, as it relies on cookies to authenticate users.
+Create AuthController:
+
+Generate a new controller:
+
+php artisan make:controller AuthController
+PHP
+
+In AuthController.php, add methods for registration, login, and logout:
+
+// Include necessary namespaces
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request; // For handling HTTP requests
+use Illuminate\Support\Facades\Auth; // For handling authentication
+use App\Models\User; // User model
+
+// Define AuthController class which extends Controller
+class AuthController extends Controller
+{
+// Function to handle user registration
+public function register(Request $request)
+{
+// Validate incoming request fields
+    $request->validate([
+    'name' => 'required|string|max:255', // Name must be a string, not exceed 255 characters and it is required
+    'email' => 'required|string|email|max:255|unique:users', // Email must be a string, a valid email, not exceed 255 characters, it is required and it must be unique in the users table
+    'password' => 'required|string|min:6', // Password must be a string, at least 6 characters and it is required
+]);
+
+// Create new User
+$user = User::create([
+'name' => $request->name,
+'email' => $request->email,
+'password' => bcrypt($request->password), // Hash the password
+]);
+
+// Return user data as JSON with a 201 (created) HTTP status code
+return response()->json(['user' => $user], 201);
+}
+
+// Function to handle user login
+public function login(Request $request)
+{
+// Validate incoming request fields
+$request->validate([
+'email' => 'required|string|email', // Email must be a string, a valid email and it is required
+'password' => 'required|string', // Password must be a string and it is required
+]);
+
+// Check if the provided credentials are valid
+if (!Auth::attempt($request->only('email', 'password'))) {
+// If not, return error message with a 401 (Unauthorized) HTTP status code
+return response()->json(['message' => 'Invalid login details'], 401);
+}
+
+// If credentials are valid, get the authenticated user
+$user = $request->user();
+// Create a new token for this user
+$token = $user->createToken('authToken')->plainTextToken;
+
+// Return user data and token as JSON
+return response()->json(['user' => $user, 'token' => $token]);
+}
+
+// Function to handle user logout
+public function logout(Request $request)
+{
+  // Delete all tokens for the authenticated user
+  $request->user()->tokens()->delete();
+
+   // Return success message as JSON
+   return response()->json(['message' => 'Logged out']);
+}
+}
+PHP
+
+Setup Routes:
+
+In the routes/api.php file, add routes for registration, login, and logout:
+
+use App\Http\Controllers\AuthController;
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+PHP
+
+You can navigate to the following urls…
+
+http://127.0.0.1:8000/api/register (to register a user  for example…) Method: Post
+
+name: Jared Jason
+
+email: Jared@admin.com
+
+password: password
+PHP
+
+Headers: Key: X-Requested-With Value: XMLHttpRequest
+
+Authorization: Type Bearer Token,  Token itself
+
+http://127.0.0.1:8000/api/login (to login)  Method: Post
+
+email: Jared@admin.com
+
+password: password
+PHP
+
+{
+"user": {
+"id": 8,
+"name": "Jared Jason",
+"email": "Jared@admin.com",
+"email_verified_at": null,
+"created_at": "2023-07-14T08:14:27.000000Z",
+"updated_at": "2023-07-14T08:14:27.000000Z"
+},
+"token": "10|hqqVZchMOJcuO29gUtAo9mKonp9T2DBYo9CQMt1U"
+}
+PHP
+
+Logging Out
+copy the token and paste it into the Bear Token under Authorization. Change the URL to logout e.g
+
+http://127.0.0.1:8000/api/logout?email=brian@brian.com&password=password
+Output:
+{
+
+ "message": "Logged out"
+
+}
+If you try to logout without the token this is what you will receive…
+
+{
+
+ "message": "Unauthenticated."
+
+}
